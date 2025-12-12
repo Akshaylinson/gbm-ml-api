@@ -1,0 +1,64 @@
+version: "3.8"
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ml_api
+      POSTGRES_USER: ml_user
+      POSTGRES_PASSWORD: ml_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://ml_user:ml_password@postgres:5432/ml_api
+      - REDIS_URL=redis://redis:6379
+      - DEBUG=false
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - postgres
+    command: uvicorn app_enhanced:app --host 0.0.0.0 --port 8000
+
+  celery_worker:
+    build: .
+    environment:
+      - DATABASE_URL=postgresql://ml_user:ml_password@postgres:5432/ml_api
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    depends_on:
+      - redis
+      - postgres
+    command: celery -A celery_app worker --loglevel=info
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+volumes:
+  redis_data:
+  postgres_data:
+  prometheus_data:

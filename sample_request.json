@@ -1,0 +1,19 @@
+{
+  "rows": [
+    {
+      "age": 45,
+      "income": 65000,
+      "balance": 1200,
+      "city": "A",
+      "has_cr_card": 1
+    },
+    {
+      "age": 27,
+      "income": 30000,
+      "balance": 500,
+      "city": "B",
+      "has_cr_card": 0
+    }
+  ]
+}
+ 
