@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gradient Boosting ML API Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --secondary-dark: #0da271;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --gray: #9ca3af;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --card-bg: #ffffff;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            color: #a5b4fc;
+        }
+
+        .logo-text h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .status-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Main Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-icon {
+            color: var(--primary);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--secondary-dark);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* Result Styles */
+        .result-container {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-top: 1.5rem;
+            border-left: 4px solid var(--primary);
+            overflow-x: auto;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        .result-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-item {
+            background-color: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .result-label {
+            font-size: 0.875rem;
+            color: var(--gray);
+            margin-bottom: 0.25rem;
+        }
+
+        .result-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--dark);
+        }
+
+        .explanation-chart {
+            height: 120px;
+            margin-top: 1rem;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            height: 300px;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .metric-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background-color: #e0e7ff;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .metric-content h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--dark);
+            line-height: 1.2;
+        }
+
+        .metric-content p {
+            font-size: 0.875rem;
+            color: var(--gray);
+        }
+
+        /* Feature Inputs Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            color: var(--gray);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .logo-text h1 {
+                font-size: 1.5rem;
+            }
+            
+            .card {
+                padding: 1.25rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-details {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(99, 102, 241, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* API Key Input */
+        .api-key-container {
+            background-color: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .api-key-container input {
+            flex: 1;
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Gradient Boosting ML API</h1>
+                        <p>Production-ready machine learning API for binary classification</p>
+                    </div>
+                </div>
+                <div class="status-badge">
+                    <div class="status-dot"></div>
+                    <span>API Status: Online</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="api-key-container">
+            <div>
+                <strong>API Key:</strong> (Demo mode - using sample data)
+            </div>
+            <div>
+                <input type="text" class="form-control" id="apiKey" value="demo-key-123" readonly>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <!-- Prediction Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-brain card-icon"></i>
+                        Make Predictions
+                    </h2>
+                    <span class="badge-success result-badge">Model v1.0</span>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab active" data-tab="single">Single Prediction</div>
+                    <div class="tab" data-tab="batch">Batch Prediction</div>
+                </div>
+                
+                <div class="tab-content active" id="single-tab">
+                    <div class="form-group">
+                        <label class="form-label">Age</label>
+                        <input type="number" class="form-control" id="age" value="35" min="18" max="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Annual Income ($)</label>
+                        <input type="number" class="form-control" id="income" value="55000" min="10000" max="500000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Account Balance ($)</label>
+                        <input type="number" class="form-control" id="balance" value="1200" min="0" max="1000000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">City</label>
+                        <select class="form-control" id="city">
+                            <option value="A">City A</option>
+                            <option value="B">City B</option>
+                            <option value="C">City C</option>
+                            <option value="D">City D</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Has Credit Card</label>
+                        <select class="form-control" id="hasCreditCard">
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="explain" checked>
+                        <label for="explain">Show feature importance (SHAP explanation)</label>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-block" id="predictBtn">
+                        <i class="fas fa-calculator"></i> Get Prediction
+                    </button>
+                </div>
+                
+                <div class="tab-content" id="batch-tab">
+                    <div class="form-group">
+                        <label class="form-label">Batch JSON Input</label>
+                        <textarea class="form-control" id="batchInput" rows="10">
+{
+  "rows": [
+    {
+      "age": 35,
+      "income": 55000,
+      "balance": 1200,
+      "city": "A",
+      "has_credit_card": 1
+    },
+    {
+      "age": 42,
+      "income": 75000,
+      "balance": 5000,
+      "city": "B",
+      "has_credit_card": 0
+    },
+    {
+      "age": 28,
+      "income": 38000,
+      "balance": 200,
+      "city": "C",
+      "has_credit_card": 1
+    }
+  ],
+  "explain": true
+}</textarea>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-block" id="batchPredictBtn">
+                        <i class="fas fa-cogs"></i> Process Batch Prediction
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Results Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-chart-line card-icon"></i>
+                        Prediction Results
+                    </h2>
+                    <div id="resultStatus" class="hidden">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+                
+                <div id="resultContainer" class="hidden">
+                    <div class="result-header">
+                        <div class="result-title">Prediction Analysis</div>
+                        <div id="riskBadge" class="result-badge"></div>
+                    </div>
+                    
+                    <div class="result-details">
+                        <div class="result-item">
+                            <div class="result-label">Prediction</div>
+                            <div class="result-value" id="predictionValue">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Probability</div>
+                            <div class="result-value" id="probabilityValue">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Processing Time</div>
+                            <div class="result-value" id="processingTime">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Model Version</div>
+                            <div class="result-value" id="modelVersion">-</div>
+                        </div>
+                    </div>
+                    
+                    <div id="explanationSection" class="hidden">
+                        <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Feature Importance</h3>
+                        <div class="explanation-chart">
+                            <canvas id="explanationChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div id="confidenceSection" class="hidden">
+                        <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1.1rem;">Confidence Interval</h3>
+                        <div class="chart-container">
+                            <canvas id="confidenceChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div id="batchResults" class="hidden">
+                        <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1.1rem;">Batch Results</h3>
+                        <div id="batchResultsTable"></div>
+                    </div>
+                </div>
+                
+                <div id="placeholderResult" class="result-container">
+                    <div style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-chart-bar" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #6b7280; margin-bottom: 0.5rem;">No prediction yet</h3>
+                        <p style="color: #9ca3af;">Enter your data and click "Get Prediction" to see results here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Metrics & Monitoring -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-tachometer-alt card-icon"></i>
+                    API Metrics & Monitoring
+                </h2>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3 id="avgResponseTime">45.2 ms</h3>
+                        <p>Avg. Response Time</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3 id="requestCount">1,247</h3>
+                        <p>Total Requests</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3 id="successRate">99.8%</h3>
+                        <p>Success Rate</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3 id="cpuUsage">24%</h3>
+                        <p>CPU Usage</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- API Information -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-code card-icon"></i>
+                    API Endpoints & Usage
+                </h2>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="endpoints">Endpoints</div>
+                <div class="tab" data-tab="features">Features</div>
+                <div class="tab" data-tab="deployment">Deployment</div>
+            </div>
+            
+            <div class="tab-content active" id="endpoints-tab">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f9fafb;">
+                                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Method</th>
+                                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Endpoint</th>
+                                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;"><span style="background-color: #10b981; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">POST</span></td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-family: monospace;">/predict</td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">Make predictions (single or batch)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;"><span style="background-color: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">GET</span></td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-family: monospace;">/health</td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">Health check endpoint</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;"><span style="background-color: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">GET</span></td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-family: monospace;">/metrics</td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">Performance metrics</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;"><span style="background-color: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">GET</span></td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-family: monospace;">/models</td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">Available model versions</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;"><span style="background-color: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">GET</span></td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-family: monospace;">/docs</td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">Interactive API documentation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="features-tab">
+                <div class="features-grid">
+                    <div class="result-item">
+                        <div class="result-label">
+                            <i class="fas fa-shield-alt" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                            Authentication
+                        </div>
+                        <div class="result-value">API Key Based</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">
+                            <i class="fas fa-tachometer-alt" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                            Rate Limiting
+                        </div>
+                        <div class="result-value">100 req/min</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">
+                            <i class="fas fa-memory" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                            Caching
+                        </div>
+                        <div class="result-value">5-min TTL</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">
+                            <i class="fas fa-chart-bar" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                            Monitoring
+                        </div>
+                        <div class="result-value">Real-time</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">
+                            <i class="fas fa-ship" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                            Docker Support
+                        </div>
+                        <div class="result-value">Full Containerization</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">
+                            <i class="fas fa-balance-scale" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                            A/B Testing
+                        </div>
+                        <div class="result-value">Model Comparison</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="deployment-tab">
+                <div class="result-details">
+                    <div class="result-item">
+                        <div class="result-label">Docker</div>
+                        <div class="result-value">Ready</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Kubernetes</div>
+                        <div class="result-value">Ready</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">AWS</div>
+                        <div class="result-value">ECS/EKS</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Google Cloud</div>
+                        <div class="result-value">Cloud Run/GKE</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Azure</div>
+                        <div class="result-value">Container Instances/AKS</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Heroku</div>
+                        <div class="result-value">Ready</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="container">
+        <p>Gradient Boosting ML API • Built with ❤️ using FastAPI, Scikit-learn, and modern MLOps practices</p>
+        <p style="margin-top: 0.5rem;">© 2023 Gradient Boosting ML API. MIT License.</p>
+    </footer>
+
+    <script>
+        // Initialize charts and UI elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching functionality
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Show active content
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+            
+            // Initialize performance chart
+            initPerformanceChart();
+            
+            // Initialize explanation chart
+            initExplanationChart();
+            
+            // Initialize confidence chart
+            initConfidenceChart();
+            
+            // Update metrics with random data (simulating live metrics)
+            updateMetrics();
+            setInterval(updateMetrics, 5000);
+            
+            // Setup event listeners for prediction buttons
+            document.getElementById('predictBtn').addEventListener('click', makeSinglePrediction);
+            document.getElementById('batchPredictBtn').addEventListener('click', makeBatchPrediction);
+        });
+        
+        function initPerformanceChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            // Generate sample data for the last 24 hours
+            const labels = [];
+            const responseTimes = [];
+            const requestCounts = [];
+            
+            for (let i = 23; i >= 0; i--) {
+                const hour = new Date();
+                hour.setHours(hour.getHours() - i);
+                labels.push(hour.getHours() + ':00');
+                
+                // Simulate realistic data with some variation
+                responseTimes.push(35 + Math.random() * 30);
+                requestCounts.push(20 + Math.random() * 80);
+            }
+            
+            window.performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Response Time (ms)',
+                            data: responseTimes,
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Requests per Hour',
+                            data: requestCounts,
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Response Time (ms)'
+                            },
+                            min: 0
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Requests per Hour'
+                            },
+                            min: 0,
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+        
+        function initExplanationChart() {
+            const ctx = document.getElementById('explanationChart').getContext('2d');
+            
+            // Initial placeholder data
+            window.explanationChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Income', 'Age', 'Balance', 'City', 'Credit Card'],
+                    datasets: [{
+                        label: 'Feature Importance',
+                        data: [0.35, 0.28, 0.22, 0.10, 0.05],
+                        backgroundColor: [
+                            'rgba(99, 102, 241, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(99, 102, 241, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(139, 92, 246, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 0.5
+                        }
+                    }
+                }
+            });
+        }
+        
+        function initConfidenceChart() {
+            const ctx = document.getElementById('confidenceChart').getContext('2d');
+            
+            // Initial placeholder data
+            window.confidenceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Lower Bound', 'Prediction', 'Upper Bound'],
+                    datasets: [{
+                        label: 'Confidence',
+                        data: [0.698, 0.742, 0.786],
+                        backgroundColor: [
+                            'rgba(156, 163, 175, 0.8)',
+                            'rgba(99, 102, 241, 0.8)',
+                            'rgba(156, 163, 175, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(156, 163, 175, 1)',
+                            'rgba(99, 102, 241, 1)',
+                            'rgba(156, 163, 175, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1.0
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateMetrics() {
+            // Simulate updating metrics with random values
+            document.getElementById('avgResponseTime').textContent = 
+                (35 + Math.random() * 20).toFixed(1) + ' ms';
+            
+            const requestCount = document.getElementById('requestCount');
+            const currentCount = parseInt(requestCount.textContent.replace(/,/g, ''));
+            requestCount.textContent = (currentCount + Math.floor(Math.random() * 5)).toLocaleString();
+            
+            document.getElementById('successRate').textContent = 
+                (98.5 + Math.random() * 1.5).toFixed(1) + '%';
+            
+            document.getElementById('cpuUsage').textContent = 
+                (20 + Math.random() * 15).toFixed(0) + '%';
+        }
+        
+        function makeSinglePrediction() {
+            // Show loading state
+            document.getElementById('resultStatus').classList.remove('hidden');
+            document.getElementById('resultContainer').classList.add('hidden');
+            document.getElementById('placeholderResult').classList.add('hidden');
+            
+            // Get form values
+            const age = parseInt(document.getElementById('age').value);
+            const income = parseInt(document.getElementById('income').value);
+            const balance = parseInt(document.getElementById('balance').value);
+            const city = document.getElementById('city').value;
+            const hasCreditCard = parseInt(document.getElementById('hasCreditCard').value);
+            const explain = document.getElementById('explain').checked;
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                // Generate mock prediction result
+                const prediction = Math.random() > 0.3 ? 1 : 0;
+                const probability = prediction === 1 ? (0.6 + Math.random() * 0.35) : (0.2 + Math.random() * 0.3);
+                const confidenceLower = probability - 0.05 - Math.random() * 0.05;
+                const confidenceUpper = probability + 0.05 + Math.random() * 0.05;
+                const processingTime = 30 + Math.random() * 40;
+                
+                // Update UI with results
+                document.getElementById('predictionValue').textContent = prediction;
+                document.getElementById('probabilityValue').textContent = probability.toFixed(3);
+                document.getElementById('processingTime').textContent = processingTime.toFixed(1) + ' ms';
+                document.getElementById('modelVersion').textContent = 'v1.0';
+                
+                // Update risk badge
+                const riskBadge = document.getElementById('riskBadge');
+                if (probability > 0.7) {
+                    riskBadge.textContent = 'HIGH RISK';
+                    riskBadge.className = 'result-badge badge-danger';
+                } else if (probability > 0.4) {
+                    riskBadge.textContent = 'MEDIUM RISK';
+                    riskBadge.className = 'result-badge badge-warning';
+                } else {
+                    riskBadge.textContent = 'LOW RISK';
+                    riskBadge.className = 'result-badge badge-success';
+                }
+                
+                // Update explanation chart if needed
+                if (explain) {
+                    document.getElementById('explanationSection').classList.remove('hidden');
+                    document.getElementById('confidenceSection').classList.remove('hidden');
+                    
+                    // Update explanation chart with new data
+                    const newData = [
+                        0.2 + Math.random() * 0.3, // Income
+                        0.15 + Math.random() * 0.25, // Age
+                        0.1 + Math.random() * 0.2, // Balance
+                        0.05 + Math.random() * 0.15, // City
+                        0.01 + Math.random() * 0.1 // Credit Card
+                    ];
+                    
+                    // Normalize to sum = probability
+                    const sum = newData.reduce((a, b) => a + b, 0);
+                    const normalizedData = newData.map(value => (value / sum) * probability);
+                    
+                    window.explanationChart.data.datasets[0].data = normalizedData;
+                    window.explanationChart.update();
+                    
+                    // Update confidence chart
+                    window.confidenceChart.data.datasets[0].data = [
+                        confidenceLower, 
+                        probability, 
+                        confidenceUpper
+                    ];
+                    window.confidenceChart.update();
+                    
+                    // Hide batch results
+                    document.getElementById('batchResults').classList.add('hidden');
+                } else {
+                    document.getElementById('explanationSection').classList.add('hidden');
+                    document.getElementById('confidenceSection').classList.add('hidden');
+                }
+                
+                // Hide loading state and show results
+                document.getElementById('resultStatus').classList.add('hidden');
+                document.getElementById('resultContainer').classList.remove('hidden');
+            }, 800); // Simulate API delay
+        }
+        
+        function makeBatchPrediction() {
+            // Show loading state
+            document.getElementById('resultStatus').classList.remove('hidden');
+            document.getElementById('resultContainer').classList.add('hidden');
+            document.getElementById('placeholderResult').classList.add('hidden');
+            
+            // Get batch input
+            const batchInput = document.getElementById('batchInput').value;
+            
+            try {
+                // Parse JSON to validate
+                const data = JSON.parse(batchInput);
+                
+                // Simulate API call delay
+                setTimeout(() => {
+                    // Generate mock batch results
+                    const batchResults = data.rows.map((row, index) => {
+                        const prediction = Math.random() > 0.3 ? 1 : 0;
+                        const probability = prediction === 1 ? 
+                            (0.6 + Math.random() * 0.35) : 
+                            (0.2 + Math.random() * 0.3);
+                        
+                        return {
+                            index: index + 1,
+                            age: row.age,
+                            income: row.income,
+                            prediction: prediction,
+                            probability: probability.toFixed(3),
+                            risk: probability > 0.7 ? 'HIGH' : probability > 0.4 ? 'MEDIUM' : 'LOW'
+                        };
+                    });
+                    
+                    // Generate HTML table for batch results
+                    let tableHTML = `
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background-color: #f9fafb;">
+                                        <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">#</th>
+                                        <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Age</th>
+                                        <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Income</th>
+                                        <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Prediction</th>
+                                        <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Probability</th>
+                                        <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Risk</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    batchResults.forEach(result => {
+                        const riskClass = result.risk === 'HIGH' ? 'badge-danger' : 
+                                         result.risk === 'MEDIUM' ? 'badge-warning' : 'badge-success';
+                        
+                        tableHTML += `
+                            <tr>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">${result.index}</td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">${result.age}</td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">$${result.income.toLocaleString()}</td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">${result.prediction}</td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">${result.probability}</td>
+                                <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">
+                                    <span class="result-badge ${riskClass}" style="font-size: 0.75rem;">${result.risk}</span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    
+                    // Update UI with batch results
+                    document.getElementById('batchResultsTable').innerHTML = tableHTML;
+                    
+                    // Update summary metrics
+                    const avgProbability = batchResults.reduce((sum, r) => sum + parseFloat(r.probability), 0) / batchResults.length;
+                    const highRiskCount = batchResults.filter(r => r.risk === 'HIGH').length;
+                    
+                    document.getElementById('predictionValue').textContent = 'Batch (' + batchResults.length + ' rows)';
+                    document.getElementById('probabilityValue').textContent = avgProbability.toFixed(3);
+                    document.getElementById('processingTime').textContent = (85 + Math.random() * 50).toFixed(1) + ' ms';
+                    document.getElementById('modelVersion').textContent = 'v1.0';
+                    
+                    // Update risk badge based on average
+                    const riskBadge = document.getElementById('riskBadge');
+                    if (avgProbability > 0.7 || highRiskCount > batchResults.length / 2) {
+                        riskBadge.textContent = 'HIGH RISK BATCH';
+                        riskBadge.className = 'result-badge badge-danger';
+                    } else if (avgProbability > 0.4 || highRiskCount > 0) {
+                        riskBadge.textContent = 'MIXED RISK BATCH';
+                        riskBadge.className = 'result-badge badge-warning';
+                    } else {
+                        riskBadge.textContent = 'LOW RISK BATCH';
+                        riskBadge.className = 'result-badge badge-success';
+                    }
+                    
+                    // Hide explanation sections
+                    document.getElementById('explanationSection').classList.add('hidden');
+                    document.getElementById('confidenceSection').classList.add('hidden');
+                    
+                    // Show batch results
+                    document.getElementById('batchResults').classList.remove('hidden');
+                    
+                    // Hide loading state and show results
+                    document.getElementById('resultStatus').classList.add('hidden');
+                    document.getElementById('resultContainer').classList.remove('hidden');
+                }, 1200); // Simulate longer API delay for batch
+                
+            } catch (error) {
+                // Handle JSON parsing error
+                document.getElementById('resultStatus').classList.add('hidden');
+                document.getElementById('resultContainer').classList.add('hidden');
+                document.getElementById('placeholderResult').classList.remove('hidden');
+                
+                // Show error in placeholder
+                document.getElementById('placeholderResult').innerHTML = `
+                    <div style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #dc2626; margin-bottom: 0.5rem;">Invalid JSON Input</h3>
+                        <p style="color: #9ca3af;">Please check your batch JSON format and try again</p>
+                        <p style="color: #9ca3af; font-size: 0.875rem; margin-top: 0.5rem;">Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
